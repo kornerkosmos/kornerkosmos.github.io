@@ -155,19 +155,27 @@ const vertexShader = `
     float wingScale = 1.0 + (0.5 * flap * isFlying);
     localPos.x *= wingScale;
     
-    // BANKING
-    float velX = aVelocity.x; 
-    // If Sky Roosting (uState=1, aLander=0), fake velocity based on circle
+    // FLYING DIRECTION: Orient cone tip toward velocity direction
+    float velX = aVelocity.x;
+    float velY = aVelocity.y;
+    // If Sky Roosting (uState=1, aLander=0), fake velocity based on circling
     if (uState > 0.5 && aLander < 0.5) {
-       // Circling Counter-Clockwise
        float angle = uTime * 0.2 + aRandom.x * 6.28;
-       // Derivative of cos is -sin
-       velX = -sin(angle); 
+       velX = -sin(angle);
+       velY = 0.0;
     }
 
-    float bankAngle = (-velX * 0.3 + (aRandom.x - 0.5) * 0.2) * isFlying;
+    // GLSL mat2(c,-s,s,c) is column-major: tip ends up at (sin θ, cos θ)
+    // So heading = atan(velX, velY) to make tip face movement direction (no offset needed)
+    // e.g. moving right: atan(1,0)=PI/2 → tip=(sin PI/2, cos PI/2)=(1,0)=RIGHT ✓
+    float heading = atan(velX, velY);
+    float speed = length(vec2(velX, velY));
+    // Only commit to heading when moving fast enough (avoids jitter when nearly still)
+    float headingWeight = smoothstep(0.02, 0.4, speed);
+
     float idleWobble = sin(uTime * 1.5 + aRandom.y * 5.0) * 0.05 * (1.0 - isFlying);
-    float finalRot = bankAngle + idleWobble;
+    float bankNoise = (aRandom.x - 0.5) * 0.15; // per-bird tilt personality
+    float finalRot = (mix(0.0, heading, headingWeight) + bankNoise) * isFlying + idleWobble;
     
     float s = sin(finalRot);
     float c = cos(finalRot);
@@ -364,10 +372,10 @@ export const CrowSwarm: React.FC = () => {
     const targetX = mousePosition.x * 6.5; 
     const targetY = mousePosition.y * 4.0;
     
-    // Head follows mouse (smoother, lazier lead for river effect)
-    head.x = THREE.MathUtils.lerp(head.x, targetX, delta * 2.0);
-    head.y = THREE.MathUtils.lerp(head.y, targetY, delta * 2.0);
-    head.z = THREE.MathUtils.lerp(head.z, 0, delta * 2.0);
+    // Head follows mouse
+    head.x = THREE.MathUtils.lerp(head.x, targetX, delta * 5.0);
+    head.y = THREE.MathUtils.lerp(head.y, targetY, delta * 5.0);
+    head.z = THREE.MathUtils.lerp(head.z, 0, delta * 5.0);
     
     // Body segments follow previous segment
     for (let i = 1; i < SPINE_COUNT; i++) {
