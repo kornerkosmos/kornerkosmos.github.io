@@ -165,17 +165,12 @@ const vertexShader = `
        velY = 0.0;
     }
 
-    // GLSL mat2(c,-s,s,c) is column-major: tip ends up at (sin θ, cos θ)
-    // So heading = atan(velX, velY) to make tip face movement direction (no offset needed)
-    // e.g. moving right: atan(1,0)=PI/2 → tip=(sin PI/2, cos PI/2)=(1,0)=RIGHT ✓
+    // heading = atan(velX, velY): GLSL mat2 col-major, tip lands at (sinθ, cosθ)
+    // moving right (velX>0,velY=0) → atan(1,0)=PI/2 → tip=(1,0) ✓
     float heading = atan(velX, velY);
-    float speed = length(vec2(velX, velY));
-    // Only commit to heading when moving fast enough (avoids jitter when nearly still)
-    float headingWeight = smoothstep(0.02, 0.4, speed);
 
     float idleWobble = sin(uTime * 1.5 + aRandom.y * 5.0) * 0.05 * (1.0 - isFlying);
-    float bankNoise = (aRandom.x - 0.5) * 0.15; // per-bird tilt personality
-    float finalRot = (mix(0.0, heading, headingWeight) + bankNoise) * isFlying + idleWobble;
+    float finalRot = heading * isFlying + idleWobble;
     
     float s = sin(finalRot);
     float c = cos(finalRot);
@@ -207,6 +202,8 @@ export const CrowSwarm: React.FC = () => {
   // -- Physics Refs --
   const positionRef = useRef(new Float32Array(COUNT * 3));
   const velocityRef = useRef(new Float32Array(COUNT * 3));
+  const prevPositionRef = useRef(new Float32Array(COUNT * 3)); // last frame positions for heading
+  const headingVelRef = useRef(new Float32Array(COUNT * 3));  // delta-based velocity sent to GPU
   const offsetRef = useRef(new Float32Array(COUNT * 3)); // Offset from spine node
   const rankRef = useRef(new Float32Array(COUNT)); // 0 = head, 1 = tail
   
@@ -352,7 +349,7 @@ export const CrowSwarm: React.FC = () => {
       
       // Dynamic Attributes
       meshRef.current.geometry.setAttribute('aBasePosition', new THREE.InstancedBufferAttribute(positionRef.current, 3));
-      meshRef.current.geometry.setAttribute('aVelocity', new THREE.InstancedBufferAttribute(velocityRef.current, 3));
+      meshRef.current.geometry.setAttribute('aVelocity', new THREE.InstancedBufferAttribute(headingVelRef.current, 3));
     }
   }, [attributes]);
 
@@ -449,6 +446,17 @@ export const CrowSwarm: React.FC = () => {
       positions[ix] += velocities[ix] * delta;
       positions[iy] += velocities[iy] * delta;
       positions[iz] += velocities[iz] * delta;
+    }
+
+    // Compute heading from actual position delta (prev frame → this frame)
+    const prevPos = prevPositionRef.current;
+    const headingVel = headingVelRef.current;
+    for (let i = 0; i < COUNT; i++) {
+      const ix = i * 3, iy = i * 3 + 1;
+      headingVel[ix] = positions[ix] - prevPos[ix];
+      headingVel[iy] = positions[iy] - prevPos[iy];
+      prevPos[ix] = positions[ix];
+      prevPos[iy] = positions[iy];
     }
 
     // Flag attributes for update
