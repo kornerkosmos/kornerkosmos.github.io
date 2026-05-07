@@ -41,7 +41,7 @@ export const Contact: React.FC = () => {
         </div>
 
         <div className="mt-12 font-mono text-xs text-center text-gray-400">
-             © 2024 Korner Kosmos. All rights reserved.
+             © 2026 Korner Kosmos. All rights reserved.
         </div>
       </div>
     </motion.div>

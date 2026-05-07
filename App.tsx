@@ -2,6 +2,7 @@ import React, { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { useStore } from './store';
 import { CrowSwarm } from './components/CrowSwarm';
+import { MouseCrows } from './components/MouseCrows';
 import { Wires } from './components/Wires';
 import { Navigation } from './components/Navigation';
 import { Nest } from './components/Nest';
@@ -10,11 +11,13 @@ import { Contact } from './components/Contact';
 import { AnimatePresence } from 'framer-motion';
 
 const Scene = () => {
+  const { currentView } = useStore();
   return (
     <>
       <ambientLight intensity={1.5} />
       <Wires />
       <CrowSwarm />
+      {currentView !== 'NEST' && <MouseCrows />}
     </>
   );
 };
@@ -43,13 +46,12 @@ const App: React.FC = () => {
         </Canvas>
       </div>
 
-      {/* Layer 2: UI */}
-      <div className="relative z-10 w-full h-full flex flex-col pointer-events-none">
-        <div className="pointer-events-auto">
-          <Navigation />
-        </div>
-        
-        <main className="flex-grow w-full h-full relative pointer-events-auto overflow-hidden">
+      {/* Navigation: root-level fixed, z-50 in root stacking context */}
+      <Navigation />
+
+      {/* Layer 2: scrollable content */}
+      <div className="relative z-10 w-full h-full pointer-events-none">
+        <main className="w-full h-full relative pointer-events-auto overflow-hidden">
           <AnimatePresence mode="wait">
             {currentView === 'NEST' && <Nest key="nest" />}
             {currentView === 'GALLERY' && <Gallery key="gallery" />}
