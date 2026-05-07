@@ -24,9 +24,19 @@ export const Gallery: React.FC = () => {
       exit={{ opacity: 0 }}
       className="w-full h-full pt-64 px-4 md:px-12 pb-12 overflow-y-auto custom-scrollbar"
       style={{
-        maskImage: 'linear-gradient(to bottom, transparent 0px, transparent 220px, black 256px)',
-        WebkitMaskImage: 'linear-gradient(to bottom, transparent 0px, transparent 220px, black 256px)',
-      }}
+        maskImage: `linear-gradient(to bottom,
+          transparent      0px,
+          transparent      200px,
+          rgba(0,0,0,0.5)  230px,
+          black            260px)`,
+        WebkitMaskImage: `linear-gradient(to bottom,
+          transparent      0px,
+          transparent      200px,
+          rgba(0,0,0,0.5)  230px,
+          black            260px)`,
+        maskAttachment: 'fixed',
+        WebkitMaskAttachment: 'fixed',
+      } as React.CSSProperties}
     >
       {/* Content positioned lower to account for wires */}
       <header className="mb-12 border-b border-black pb-4 mt-8">

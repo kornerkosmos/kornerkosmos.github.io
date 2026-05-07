@@ -1,174 +1,142 @@
-import { useRef, useMemo, useEffect } from 'react';
-import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import { useEffect, useRef } from 'react';
 import { useStore } from '../store';
 
 const COUNT = 6;
 const SPINE_COUNT = 12;
 
-const vertexShader = `
-  uniform float uTime;
-  attribute vec3 aPos;
-  attribute vec3 aVel;
-  attribute float aRand;
+// Convert Three.js world coords → screen pixels
+// Camera z=8, FOV=60, tan(30°)=0.5774, half-height=4.619 world units
+const toScreen = (wx: number, wy: number) => {
+  const aspect = window.innerWidth / window.innerHeight;
+  const halfH = 4.619;
+  const halfW = halfH * aspect;
+  return {
+    x: ((wx / halfW) + 1) / 2 * window.innerWidth,
+    y: (1 - wy / halfH) / 2 * window.innerHeight,
+  };
+};
 
-  void main() {
-    vec3 p = position;
-
-    float speed = 12.0 + aRand * 8.0;
-    float flap  = sin(uTime * speed + aRand * 6.2832);
-    p.x *= 1.0 + 0.5 * flap;
-    p   *= 0.7 + 0.6 * aRand;
-
-    float heading = atan(aVel.x, aVel.y);
-    float s = sin(heading);
-    float c = cos(heading);
-    p.xy = mat2(c, -s, s, c) * p.xy;
-
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(aPos + p, 1.0);
-  }
-`;
-
-const fragmentShader = `
-  void main() { gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0); }
-`;
-
-export const MouseCrows: React.FC = () => {
-  const meshRef  = useRef<THREE.InstancedMesh>(null);
-  const matRef   = useRef<THREE.ShaderMaterial>(null);
+export function MouseCrows() {
+  const svgRef = useRef<SVGSVGElement>(null);
   const { mousePosition } = useStore();
+  const mouseRef = useRef(mousePosition);
 
-  // Spine — chain of nodes, head follows mouse
-  const spineRef = useRef<THREE.Vector3[]>(
-    Array.from({ length: SPINE_COUNT }, () => new THREE.Vector3())
-  );
-
-  const posRef         = useRef(new Float32Array(COUNT * 3));
-  const velRef         = useRef(new Float32Array(COUNT * 3));
-  const prevPosRef     = useRef(new Float32Array(COUNT * 3));
-  const velDisplayRef  = useRef(new Float32Array(COUNT * 3));
-  const initialised    = useRef(false);
-
-  const { material, randArray, offsetArray, rankArray } = useMemo(() => {
-    const rand   = new Float32Array(COUNT);
-    const offset = new Float32Array(COUNT * 3);
-    const rank   = new Float32Array(COUNT);
-
-    for (let i = 0; i < COUNT; i++) {
-      rand[i] = Math.random();
-      // Same offset style as main CrowSwarm
-      offset[i * 3]     = (Math.random() - 0.5) * 2.0;
-      offset[i * 3 + 1] = (Math.random() - 0.5) * 1.0;
-      offset[i * 3 + 2] = (Math.random() - 0.5) * 1.5 - 2.0; // slight depth
-      rank[i] = i / COUNT;
-    }
-
-    const mat = new THREE.ShaderMaterial({
-      vertexShader,
-      fragmentShader,
-      uniforms: { uTime: { value: 0 } },
-      side: THREE.DoubleSide,
-    });
-
-    return { material: mat, randArray: rand, offsetArray: offset, rankArray: rank };
-  }, []);
+  // Keep mouseRef in sync without re-triggering the RAF loop
+  useEffect(() => { mouseRef.current = mousePosition; }, [mousePosition]);
 
   useEffect(() => {
-    const mesh = meshRef.current;
-    if (!mesh) return;
-    const geo = mesh.geometry;
-    geo.setAttribute('aPos',  new THREE.InstancedBufferAttribute(posRef.current, 3));
-    geo.setAttribute('aVel',  new THREE.InstancedBufferAttribute(velDisplayRef.current, 3));
-    geo.setAttribute('aRand', new THREE.InstancedBufferAttribute(randArray, 1));
-  }, [randArray]);
+    // Spine
+    const spine = Array.from({ length: SPINE_COUNT }, () => ({ x: 0, y: 0 }));
 
-  useFrame((state, delta) => {
-    const mesh = meshRef.current;
-    const mat  = matRef.current;
-    if (!mesh || !mat) return;
-    const geo = mesh.geometry;
-    if (!geo.attributes.aPos) return;
+    // Per-bird state
+    const offsets = Array.from({ length: COUNT }, (_, i) => ({
+      x: (Math.random() - 0.5) * 2.0,
+      y: (Math.random() - 0.5) * 1.0,
+    }));
+    const stiffness = [4.5, 3.2, 3.8, 2.8, 4.0, 3.4];
+    const ranks = Array.from({ length: COUNT }, (_, i) => i / COUNT);
+    const pos = Array.from({ length: COUNT }, () => ({ x: 0, y: 0 }));
+    const vel = Array.from({ length: COUNT }, () => ({ x: 0, y: 0 }));
+    const prev = Array.from({ length: COUNT }, () => ({ x: 0, y: 0 }));
 
-    const time         = state.clock.getElapsedTime();
-    mat.uniforms.uTime.value = time;
+    // SVG polygon elements — one per crow
+    const polys: SVGPolygonElement[] = [];
+    const svg = svgRef.current;
+    if (!svg) return;
 
-    const mx = mousePosition.x * 6.5;
-    const my = mousePosition.y * 4.0;
-
-    // Snap everything to mouse on first frame
-    if (!initialised.current) {
-      spineRef.current.forEach(n => n.set(mx, my, 0));
-      for (let i = 0; i < COUNT; i++) {
-        posRef.current[i * 3]     = mx + offsetArray[i * 3];
-        posRef.current[i * 3 + 1] = my + offsetArray[i * 3 + 1];
-        posRef.current[i * 3 + 2] = offsetArray[i * 3 + 2];
-        prevPosRef.current.set(posRef.current);
-      }
-      initialised.current = true;
-    }
-
-    const d = Math.min(delta, 0.05);
-
-    // --- Spine physics (identical to CrowSwarm) ---
-    const head = spineRef.current[0];
-    head.x = THREE.MathUtils.lerp(head.x, mx, d * 5.0);
-    head.y = THREE.MathUtils.lerp(head.y, my, d * 5.0);
-    head.z = THREE.MathUtils.lerp(head.z, 0,  d * 5.0);
-
-    for (let i = 1; i < SPINE_COUNT; i++) {
-      const prev = spineRef.current[i - 1];
-      const curr = spineRef.current[i];
-      const drag = 8.0 + i * 0.1;
-      curr.x = THREE.MathUtils.lerp(curr.x, prev.x, d * drag);
-      curr.y = THREE.MathUtils.lerp(curr.y, prev.y, d * drag);
-      curr.z = THREE.MathUtils.lerp(curr.z, prev.z, d * drag);
-    }
-
-    // --- Bird physics (identical to CrowSwarm) ---
     for (let i = 0; i < COUNT; i++) {
-      const ix = i * 3, iy = ix + 1, iz = ix + 2;
-
-      const fi      = rankArray[i] * (SPINE_COUNT - 1);
-      const idxA    = Math.floor(fi);
-      const idxB    = Math.min(idxA + 1, SPINE_COUNT - 1);
-      const alpha   = fi - idxA;
-      const nodeA   = spineRef.current[idxA];
-      const nodeB   = spineRef.current[idxB];
-
-      const sx = THREE.MathUtils.lerp(nodeA.x, nodeB.x, alpha);
-      const sy = THREE.MathUtils.lerp(nodeA.y, nodeB.y, alpha);
-      const sz = THREE.MathUtils.lerp(nodeA.z, nodeB.z, alpha);
-
-      let tx = sx + offsetArray[ix] + Math.sin(time * 1.5 + offsetArray[iy]) * 0.2;
-      let ty = sy + offsetArray[iy] + Math.cos(time * 1.2 + offsetArray[ix]) * 0.2;
-      let tz = sz + offsetArray[iz];
-
-      const ax = (tx - posRef.current[ix]) * 2.5;
-      const ay = (ty - posRef.current[iy]) * 2.5;
-      const az = (tz - posRef.current[iz]) * 2.5;
-
-      velRef.current[ix] = (velRef.current[ix] + ax * d) * 0.96;
-      velRef.current[iy] = (velRef.current[iy] + ay * d) * 0.96;
-      velRef.current[iz] = (velRef.current[iz] + az * d) * 0.96;
-
-      posRef.current[ix] += velRef.current[ix] * d;
-      posRef.current[iy] += velRef.current[iy] * d;
-      posRef.current[iz] += velRef.current[iz] * d;
-
-      velDisplayRef.current[ix] = posRef.current[ix] - prevPosRef.current[ix];
-      velDisplayRef.current[iy] = posRef.current[iy] - prevPosRef.current[iy];
-      prevPosRef.current[ix] = posRef.current[ix];
-      prevPosRef.current[iy] = posRef.current[iy];
+      const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+      poly.setAttribute('points', '0,-7 5.5,5 -5.5,5');
+      poly.setAttribute('fill', 'black');
+      svg.appendChild(poly);
+      polys.push(poly);
     }
 
-    geo.attributes.aPos.needsUpdate = true;
-    geo.attributes.aVel.needsUpdate = true;
-  });
+    let raf = 0;
+    let lastTime = performance.now();
+    let initialised = false;
+
+    const tick = (now: number) => {
+      const delta = Math.min((now - lastTime) / 1000, 0.05);
+      lastTime = now;
+
+      const mx = mouseRef.current.x * 6.5;
+      const my = mouseRef.current.y * 4.0;
+
+      // Snap on first frame
+      if (!initialised) {
+        spine.forEach(n => { n.x = mx; n.y = my; });
+        pos.forEach((p, i) => { p.x = mx + offsets[i].x; p.y = my + offsets[i].y; });
+        prev.forEach((p, i) => { p.x = pos[i].x; p.y = pos[i].y; });
+        initialised = true;
+      }
+
+      // Spine physics
+      spine[0].x += (mx - spine[0].x) * (1 - Math.pow(1 - 5 * delta, 1));
+      spine[0].y += (my - spine[0].y) * (1 - Math.pow(1 - 5 * delta, 1));
+      for (let i = 1; i < SPINE_COUNT; i++) {
+        const drag = 8.0 + i * 0.1;
+        spine[i].x += (spine[i - 1].x - spine[i].x) * (1 - Math.pow(1 - drag * delta, 1));
+        spine[i].y += (spine[i - 1].y - spine[i].y) * (1 - Math.pow(1 - drag * delta, 1));
+      }
+
+      const t = performance.now() * 0.001;
+
+      for (let i = 0; i < COUNT; i++) {
+        // Spine interpolation
+        const fi = ranks[i] * (SPINE_COUNT - 1);
+        const ia = Math.floor(fi);
+        const ib = Math.min(ia + 1, SPINE_COUNT - 1);
+        const alpha = fi - ia;
+        const sx = spine[ia].x + (spine[ib].x - spine[ia].x) * alpha;
+        const sy = spine[ia].y + (spine[ib].y - spine[ia].y) * alpha;
+
+        // Target with undulation
+        const tx = sx + offsets[i].x + Math.sin(t * 1.5 + offsets[i].y) * 0.2;
+        const ty = sy + offsets[i].y + Math.cos(t * 1.2 + offsets[i].x) * 0.2;
+
+        // Spring
+        vel[i].x = (vel[i].x + (tx - pos[i].x) * 2.5 * delta) * 0.96;
+        vel[i].y = (vel[i].y + (ty - pos[i].y) * 2.5 * delta) * 0.96;
+        pos[i].x += vel[i].x * delta;
+        pos[i].y += vel[i].y * delta;
+
+        // Heading from delta
+        const dvx = pos[i].x - prev[i].x;
+        const dvy = pos[i].y - prev[i].y;
+        prev[i].x = pos[i].x;
+        prev[i].y = pos[i].y;
+
+        const heading = Math.atan2(dvx, dvy); // matches shader: atan(velX, velY)
+
+        // Wing flap — scale x of the polygon
+        const flapSpeed = 10 + (i / COUNT) * 6;
+        const flap = 1 + 0.55 * Math.sin(t * flapSpeed + i * 1.1);
+
+        const { x: sx2, y: sy2 } = toScreen(pos[i].x, pos[i].y);
+
+        polys[i].setAttribute(
+          'transform',
+          `translate(${sx2.toFixed(1)},${sy2.toFixed(1)}) rotate(${(heading * 180 / Math.PI).toFixed(1)}) scale(${flap.toFixed(3)},1)`
+        );
+      }
+
+      raf = requestAnimationFrame(tick);
+    };
+
+    raf = requestAnimationFrame(tick);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      polys.forEach(p => p.remove());
+    };
+  }, []);
 
   return (
-    <instancedMesh ref={meshRef} args={[undefined, undefined, COUNT]}>
-      <coneGeometry args={[0.08, 0.14, 3]} />
-      <primitive object={material} ref={matRef} attach="material" />
-    </instancedMesh>
+    <svg
+      ref={svgRef}
+      className="fixed inset-0 w-full h-full z-20 pointer-events-none"
+      style={{ overflow: 'visible' }}
+    />
   );
-};
+}

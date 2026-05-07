@@ -10,17 +10,13 @@ import { Gallery } from './components/Gallery';
 import { Contact } from './components/Contact';
 import { AnimatePresence } from 'framer-motion';
 
-const Scene = () => {
-  const { currentView } = useStore();
-  return (
-    <>
-      <ambientLight intensity={1.5} />
-      <Wires />
-      <CrowSwarm />
-      {currentView !== 'NEST' && <MouseCrows />}
-    </>
-  );
-};
+const Scene = () => (
+  <>
+    <ambientLight intensity={1.5} />
+    <Wires />
+    <CrowSwarm />
+  </>
+);
 
 const App: React.FC = () => {
   const { currentView, setMousePosition } = useStore();
@@ -45,6 +41,9 @@ const App: React.FC = () => {
           </Suspense>
         </Canvas>
       </div>
+
+      {/* MouseCrows SVG overlay — pure DOM, guaranteed above gallery (z-20) */}
+      {currentView !== 'NEST' && <MouseCrows />}
 
       {/* Navigation: root-level fixed, z-50 in root stacking context */}
       <Navigation />
