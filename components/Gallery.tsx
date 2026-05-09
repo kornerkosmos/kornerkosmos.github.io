@@ -38,13 +38,7 @@ export const Gallery: React.FC = () => {
         WebkitMaskAttachment: 'fixed',
       } as React.CSSProperties}
     >
-      {/* Content positioned lower to account for wires */}
-      <header className="mb-12 border-b border-black pb-4 mt-8">
-        <h2 className="font-serif text-4xl mb-2">Visual Archive</h2>
-        <p className="font-mono text-xs text-gray-500 uppercase tracking-widest">Illustration & Photography</p>
-      </header>
-
-      <div className="columns-1 md:columns-2 lg:columns-3 gap-8">
+      <div className="columns-1 md:columns-2 lg:columns-3 gap-8 mt-8">
         {ART_PIECES.map((piece, index) => {
           const { size, rotate, nudge } = organicProps(index);
           return (
