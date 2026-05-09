@@ -40,11 +40,13 @@ export const Navigation: React.FC = () => {
     { label: 'Korner Kosmos', value: 'GALLERY' },
   ];
 
+
+
   return (
     <nav ref={navRef} className="fixed top-0 left-0 w-full z-50 p-6 flex flex-col md:flex-row justify-between items-center text-black pointer-events-none">
       <div 
         className="font-serif text-2xl font-bold tracking-tighter cursor-pointer select-none pointer-events-auto"
-        onClick={(e) => handleNavClick(e, 'CONTACT')}
+        onClick={(e) => handleNavClick(e, 'NEST')}
       >
         K.K.
       </div>

@@ -7,7 +7,7 @@ import { Wires } from './components/Wires';
 import { Navigation } from './components/Navigation';
 import { Nest } from './components/Nest';
 import { Gallery } from './components/Gallery';
-import { Contact } from './components/Contact';
+import { Footer } from './components/Footer';
 import { AnimatePresence } from 'framer-motion';
 
 const Scene = () => (
@@ -48,13 +48,15 @@ const App: React.FC = () => {
       {/* Navigation: root-level fixed, z-50 in root stacking context */}
       <Navigation />
 
+      {/* Footer: fixed bottom social links + copyright */}
+      <Footer />
+
       {/* Layer 2: scrollable content */}
       <div className="relative z-10 w-full h-full pointer-events-none">
         <main className="w-full h-full relative pointer-events-auto overflow-hidden">
           <AnimatePresence mode="wait">
             {currentView === 'NEST' && <Nest key="nest" />}
             {currentView === 'GALLERY' && <Gallery key="gallery" />}
-            {currentView === 'CONTACT' && <Contact key="contact" />}
           </AnimatePresence>
         </main>
       </div>

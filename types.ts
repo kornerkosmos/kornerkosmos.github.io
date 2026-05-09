@@ -19,7 +19,7 @@ export interface ObservationLog {
   tags: string[];
 }
 
-export type ViewState = 'NEST' | 'GALLERY' | 'CONTACT';
+export type ViewState = 'NEST' | 'GALLERY';
 
 export interface WireDef {
   id: number;
