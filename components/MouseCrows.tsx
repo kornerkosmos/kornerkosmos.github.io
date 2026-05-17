@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useStore } from '../store';
 
-const COUNT = 6;
+const COUNT = 3;
 const SPINE_COUNT = 12;
 
 // Convert Three.js world coords → screen pixels

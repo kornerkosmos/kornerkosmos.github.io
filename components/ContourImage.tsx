@@ -77,7 +77,7 @@ export function ContourImage({ src, label, className }: ContourImageProps) {
 
   const pathId = `orbit-${seed}`;
 
-  // Animate SVG startOffset — pure DOM, no React re-renders
+  // Animate SVG startOffset 0%→50% of the doubled path = one seamless full orbit at natural spacing
   useEffect(() => {
     const el = textPathRef.current;
     if (!el) return;
@@ -85,7 +85,7 @@ export function ContourImage({ src, label, className }: ContourImageProps) {
     const startTime = performance.now();
     const animate = (now: number) => {
       const progress = ((now - startTime) / ORBIT_PERIOD_MS) % 1;
-      el.setAttribute('startOffset', `${(progress * 100).toFixed(3)}%`);
+      el.setAttribute('startOffset', `${(progress * 50).toFixed(3)}%`);
       frame = requestAnimationFrame(animate);
     };
     frame = requestAnimationFrame(animate);
@@ -153,19 +153,20 @@ export function ContourImage({ src, label, className }: ContourImageProps) {
         path.push({ x: baseX + (targetX - baseX) * easedReveal, y: baseY + (targetY - baseY) * easedReveal });
       }
 
-      // Update SVG path to match blob outline + outset (for textPath to follow)
+      // Update SVG path (doubled) and textLength so text always fills a full orbit.
       const svgPath = svgPathRef.current;
       if (svgPath) {
         const pts = path.slice(0, pointCount);
-        const d = pts.map((p, i) => {
+        const coords = pts.map(p => {
           const dx = p.x - hoverCenterX;
           const dy = p.y - hoverCenterY;
           const dist = Math.hypot(dx, dy) || 1;
-          const ox = (p.x + (dx / dist) * textOutset).toFixed(2);
-          const oy = (p.y + (dy / dist) * textOutset).toFixed(2);
-          return `${i === 0 ? 'M' : 'L'}${ox},${oy}`;
-        }).join('') + 'Z';
-        svgPath.setAttribute('d', d);
+          return `${(p.x + (dx / dist) * textOutset).toFixed(2)},${(p.y + (dy / dist) * textOutset).toFixed(2)}`;
+        });
+        const start = `M${coords[0]}`;
+        const rest = coords.slice(1).map(c => `L${c}`).join('');
+        svgPath.setAttribute('d', `${start}${rest}L${coords[0]}${rest}`);
+
       }
 
       // Image clip

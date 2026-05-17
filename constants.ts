@@ -60,7 +60,7 @@ export const ART_PIECES: ArtPiece[] = [
   {
     id: 'i3',
     type: 'illustration',
-    title: ' the Artist and the Muse ',
+    title: " L'artiste et sa muse ",
     imageSrc: '/illustrations/141169054_p0.png',
     mood: '',
     description: ''

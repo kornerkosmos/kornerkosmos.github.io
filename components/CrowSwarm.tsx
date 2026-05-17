@@ -5,7 +5,7 @@ import { useStore } from '../store';
 
 const COUNT = 225;
 const SPINE_COUNT = 50;
-const LANDER_COUNT = 38; // ~3/4 of original 50
+const LANDER_COUNT = 38;
 
 // Helper to generate positions from text
 function generateTextPositions(count: number, text: string): Float32Array {
@@ -80,7 +80,8 @@ const vertexShader = `
   uniform float uExplode; // 0 = At Anchor, 1 = Free
   uniform float uFormText; // 1 = Form Text, 0 = Natural
   uniform vec3 uAnchor;
-  
+  uniform float uActiveRatio; // 1.0 = all birds, 0.5 = half culled
+
   attribute vec3 aBasePosition; // Updated via JS
   attribute vec3 aTextPosition; 
   attribute vec3 aRandom; 
@@ -93,7 +94,13 @@ const vertexShader = `
 
   void main() {
     vUv = uv;
-    
+
+    // Cull this bird off-screen if it's above the active ratio threshold
+    if (aRandom.y > uActiveRatio) {
+      gl_Position = vec4(99999.0, 99999.0, 99999.0, 1.0);
+      return;
+    }
+
     // --- 1. Compute Targets ---
     vec3 flowPos = aBasePosition;
     vec3 roostPos;
@@ -198,6 +205,8 @@ export const CrowSwarm: React.FC = () => {
   const { mousePosition, currentView, transitionStage, setTransitionStage, anchorPoint } = useStore();
   
   const introStartTime = useRef(Date.now());
+  const thinStartTime = useRef(0);
+  const hasThinned = useRef(false);
   
   // -- Physics Refs --
   const positionRef = useRef(new Float32Array(COUNT * 3));
@@ -471,6 +480,17 @@ export const CrowSwarm: React.FC = () => {
     const textFormValue = Math.max(0, 1.0 - Math.max(0, timeSinceStart - 1.5) * 0.5);
     shaderRef.current.uniforms.uFormText.value = textFormValue;
 
+    // Once K.K. has fully dispersed, smoothly thin the swarm to half
+    if (textFormValue < 0.05 && !hasThinned.current) {
+      hasThinned.current = true;
+      thinStartTime.current = Date.now();
+    }
+    if (hasThinned.current) {
+      const t = Math.min(1.0, (Date.now() - thinStartTime.current) / 2500);
+      const eased = t * t * (3 - 2 * t);
+      shaderRef.current.uniforms.uActiveRatio.value = 1.0 - eased * 0.5;
+    }
+
     const isRoosting = currentView !== 'NEST';
     const desiredState = isRoosting ? 1.0 : 0.0;
     const currentState = shaderRef.current.uniforms.uState.value;
@@ -499,9 +519,10 @@ export const CrowSwarm: React.FC = () => {
       uniforms: {
         uTime: { value: 0 },
         uState: { value: 0 },
-        uExplode: { value: 1.0 }, 
+        uExplode: { value: 1.0 },
         uFormText: { value: 1.0 },
         uAnchor: { value: new THREE.Vector3(0,0,0) },
+        uActiveRatio: { value: 1.0 },
       },
       side: THREE.DoubleSide,
     });

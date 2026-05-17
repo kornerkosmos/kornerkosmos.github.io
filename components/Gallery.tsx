@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ART_PIECES } from '../constants';
 import { ArtPiece, ProjectType } from '../types';
@@ -84,51 +85,51 @@ export const Gallery: React.FC<GalleryProps> = ({ type }) => {
         })}
       </div>
 
-      <AnimatePresence>
-        {selectedPiece && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[60] flex items-center justify-center bg-white/96 backdrop-blur-md"
-            onClick={() => setSelectedPiece(null)}
-          >
-            {/* Close */}
-            <button
-              className="absolute top-8 right-8 font-mono text-[10px] tracking-[0.2em] uppercase opacity-40 hover:opacity-100 transition-opacity flex items-center gap-2"
+      {createPortal(
+        <AnimatePresence>
+          {selectedPiece && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[200] flex items-center justify-center bg-white"
               onClick={() => setSelectedPiece(null)}
             >
-              <X size={12} strokeWidth={1.5} />
-              Close
-            </button>
+              <button
+                className="absolute top-8 right-8 font-mono text-[10px] tracking-[0.2em] uppercase opacity-40 hover:opacity-100 transition-opacity flex items-center gap-2"
+                onClick={() => setSelectedPiece(null)}
+              >
+                <X size={12} strokeWidth={1.5} />
+                Close
+              </button>
 
-            <motion.div
-              initial={{ scale: 0.96, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.96, opacity: 0 }}
-              transition={{ duration: 0.25 }}
-              className="relative"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <img
-                src={selectedPiece.imageSrc}
-                alt=""
-                className="block max-h-[80vh] max-w-[85vw] w-auto h-auto object-contain"
-              />
+              <motion.div
+                initial={{ scale: 0.96, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.96, opacity: 0 }}
+                transition={{ duration: 0.25 }}
+                className="relative"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <img
+                  src={selectedPiece.imageSrc}
+                  alt=""
+                  className="block max-h-[80vh] max-w-[85vw] w-auto h-auto object-contain"
+                />
 
-              {/* Top-left: ◤ — above image */}
-              <div className="absolute -top-4 -left-4 z-10 pointer-events-none">
-                <RockingTriangle size={48} delay={0} corner="tl" />
-              </div>
+                <div className="absolute -top-4 -left-4 z-10 pointer-events-none">
+                  <RockingTriangle size={48} delay={0} corner="tl" />
+                </div>
 
-              {/* Bottom-right: ◢ — above image */}
-              <div className="absolute -bottom-4 -right-4 z-10 pointer-events-none">
-                <RockingTriangle size={48} delay={0.5} corner="br" />
-              </div>
+                <div className="absolute -bottom-4 -right-4 z-10 pointer-events-none">
+                  <RockingTriangle size={48} delay={0.5} corner="br" />
+                </div>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </motion.div>
   );
 };

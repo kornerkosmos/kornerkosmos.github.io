@@ -38,7 +38,7 @@ export const Navigation: React.FC = () => {
     >
       {/* Logo */}
       <div
-        className="font-serif text-2xl font-bold tracking-tighter cursor-pointer select-none pointer-events-auto mt-1"
+        className="font-serif text-2xl tracking-tighter cursor-pointer select-none pointer-events-auto mt-1"
         onClick={(e) => handleNavClick(e, 'NEST')}
       >
         K.K.
@@ -52,7 +52,7 @@ export const Navigation: React.FC = () => {
           onClick={(e) => handleNavClick(e, 'NEST')}
           className={clsx(
             'relative group py-1 transition-opacity duration-300',
-            currentView === 'NEST' ? 'opacity-100 font-bold' : 'opacity-40 hover:opacity-100'
+            currentView === 'NEST' ? 'opacity-100' : 'opacity-40 hover:opacity-100'
           )}
         >
           Krow Konference
@@ -138,7 +138,7 @@ export const Navigation: React.FC = () => {
                         {/* Label */}
                         <span className={clsx(
                           'tracking-widest transition-all duration-200',
-                          active ? 'font-bold' : 'font-normal'
+                          'font-normal'
                         )}>
                           {item.label}
                         </span>

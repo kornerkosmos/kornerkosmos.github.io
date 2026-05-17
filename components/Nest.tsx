@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { SpinningPyramid } from './SpinningPyramid';
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -97,15 +98,30 @@ export const Nest: React.FC = () => (
   >
     <div className="h-[80vh] pointer-events-none" />
 
-    <div className="relative bg-white/92 backdrop-blur-sm border-t border-black">
+    {/* Wire separator — parabolic sag matching the background Wires component */}
+    <svg
+      className="w-full block"
+      viewBox="0 0 1000 32"
+      preserveAspectRatio="none"
+      style={{ height: 32, display: 'block' }}
+      aria-hidden
+    >
+      <path
+        d="M 0,5 Q 500,27 1000,5"
+        stroke="black"
+        strokeWidth="1.5"
+        strokeOpacity="0.18"
+        fill="none"
+      />
+    </svg>
+
+    <div className="relative bg-white/92 backdrop-blur-sm">
       <div className="max-w-5xl mx-auto px-6 md:px-16 py-20">
 
-        {/* Section glyph */}
-        <div className="flex items-end gap-1.5 mb-20 opacity-80">
-          {[28, 40, 28].map((s, i) => (
-            <svg key={i} width={s} height={s * 0.866} viewBox="0 0 100 86.6" fill="none">
-              <polygon points="50,0 100,86.6 0,86.6" fill="black" />
-            </svg>
+        {/* Section glyph — 3D tetrahedra spinning on Y-axis */}
+        <div className="flex items-end gap-3 mb-20">
+          {([36, 52, 36] as const).map((s, i) => (
+            <SpinningPyramid key={i} size={s} speed={1 - i * 0.15} />
           ))}
         </div>
 
