@@ -44,8 +44,8 @@ export const ART_PIECES: ArtPiece[] = [
   {
     id: 'i1',
     type: 'illustration',
-    title: ' अनुत्पन्ना अनिरुद्धा अमला विमला नोना न परिपूर्णाः । ',
-    imageSrc: '/illustrations/95235558_p0.png',
+    title: ' 𓇋𓈖𓊪𓅱𓃣 𓎟 𓇾𓏤 𓅟𓂋𓈉 ',
+    imageSrc: '/illustrations/86879676_p0.png',
     mood: '',
     description: ''
   },
@@ -60,16 +60,16 @@ export const ART_PIECES: ArtPiece[] = [
   {
     id: 'i3',
     type: 'illustration',
-    title: " L'artiste et sa muse ",
-    imageSrc: '/illustrations/141169054_p0.png',
+    title: ' अनुत्पन्ना अनिरुद्धा अमला विमला नोना न परिपूर्णाः । ',
+    imageSrc: '/illustrations/95235558_p0.png',
     mood: '',
     description: ''
   },
   {
     id: 'i4',
     type: 'illustration',
-    title: ' 𓇋𓈖𓊪𓅱𓃣 𓎟 𓇾𓏤 𓅟𓂋𓈉 ',
-    imageSrc: '/illustrations/86879676_p0.png',
+    title: " L'artiste et sa muse ",
+    imageSrc: '/illustrations/141169054_p0.png',
     mood: '',
     description: ''
   }

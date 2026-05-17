@@ -223,7 +223,7 @@ export function ContourImage({ src, label, className }: ContourImageProps) {
   }, [src, label]);
 
   return (
-    <div className={`relative aspect-square w-full min-w-0 cursor-pointer ${className ?? ''}`}>
+    <div className={`relative aspect-square w-full min-w-0 cursor-pointer overflow-visible ${className ?? ''}`}>
       <img
         ref={imgRef}
         src={src}
@@ -243,6 +243,7 @@ export function ContourImage({ src, label, className }: ContourImageProps) {
       <svg
         viewBox={`0 0 ${width} ${height}`}
         className="absolute inset-0 w-full h-full pointer-events-none"
+        style={{ overflow: 'visible' }}
         aria-hidden
       >
         <defs>
@@ -253,6 +254,7 @@ export function ContourImage({ src, label, className }: ContourImageProps) {
           fontWeight={svgFontWeight}
           fontFamily={svgFontFamily}
           fill={`rgb(${textGray},${textGray},${textGray})`}
+          letterSpacing="0.8"
         >
           <textPath ref={textPathRef} href={`#${pathId}`} startOffset="0%">
             {contourText}
