@@ -3,9 +3,9 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useStore } from '../store';
 
-const COUNT = 300; 
-const SPINE_COUNT = 50; // Increased from 12 to 50 for a longer "river" tail
-const LANDER_COUNT = 50; // Only this many birds will sit on the wire
+const COUNT = 225;
+const SPINE_COUNT = 50;
+const LANDER_COUNT = 38; // ~3/4 of original 50
 
 // Helper to generate positions from text
 function generateTextPositions(count: number, text: string): Float32Array {

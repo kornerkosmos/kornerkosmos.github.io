@@ -1,24 +1,46 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ART_PIECES } from '../constants';
-import { ArtPiece } from '../types';
+import { ArtPiece, ProjectType } from '../types';
 import { X } from 'lucide-react';
 import { ContourImage } from './ContourImage';
 
-// Deterministic per-item organic properties based on index
 const organicProps = (index: number) => {
   const h = Math.imul(index * 2654435761 + 1, 0x9e3779b9) >>> 0;
-  const size = 58 + (h % 38);              // 58–95% of column width
-  const rotate = ((h >> 8) % 11 - 5) * 0.45; // –2.25 to +2.25 deg
-  const nudge = ((h >> 16) % 24) - 12;    // –12 to +12 px vertical nudge
+  const size = 58 + (h % 38);
+  const rotate = ((h >> 8) % 11 - 5) * 0.45;
+  const nudge = ((h >> 16) % 24) - 12;
   return { size, rotate, nudge };
 };
 
-export const Gallery: React.FC = () => {
-  const [selectedPiece, setSelectedPiece] = useState<ArtPiece | null>(null);
+const RockingTriangle = ({ size = 42, delay = 0, corner }: { size?: number; delay?: number; corner: 'tl' | 'br' }) => {
+  const L = size;
+  const pts    = corner === 'tl' ? `0,0 ${L},0 0,${L}` : `${L},${L} 0,${L} ${L},0`;
+  const origin = corner === 'tl' ? '0px 0px' : `${L}px ${L}px`;
 
   return (
-    <motion.div 
+    <motion.div
+      animate={{ rotate: [-3, 3, -3] }}
+      transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut', delay }}
+      style={{ transformOrigin: origin, display: 'inline-flex', width: L, height: L }}
+    >
+      <svg width={L} height={L} viewBox={`0 0 ${L} ${L}`} fill="none">
+        <polygon points={pts} fill="none" stroke="black" strokeWidth="1.2" strokeLinejoin="miter" />
+      </svg>
+    </motion.div>
+  );
+};
+
+interface GalleryProps {
+  type: ProjectType;
+}
+
+export const Gallery: React.FC<GalleryProps> = ({ type }) => {
+  const [selectedPiece, setSelectedPiece] = useState<ArtPiece | null>(null);
+  const pieces = ART_PIECES.filter(p => p.type === type);
+
+  return (
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -39,7 +61,7 @@ export const Gallery: React.FC = () => {
       } as React.CSSProperties}
     >
       <div className="columns-1 md:columns-2 lg:columns-3 gap-8 mt-8">
-        {ART_PIECES.map((piece, index) => {
+        {pieces.map((piece, index) => {
           const { size, rotate, nudge } = organicProps(index);
           return (
             <motion.div
@@ -64,28 +86,46 @@ export const Gallery: React.FC = () => {
 
       <AnimatePresence>
         {selectedPiece && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-white/95 backdrop-blur-sm"
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-white/96 backdrop-blur-md"
             onClick={() => setSelectedPiece(null)}
           >
-            <button className="absolute top-8 right-8 p-2 border border-black hover:bg-black hover:text-white transition-colors rounded-full">
-              <X size={24} />
+            {/* Close */}
+            <button
+              className="absolute top-8 right-8 font-mono text-[10px] tracking-[0.2em] uppercase opacity-40 hover:opacity-100 transition-opacity flex items-center gap-2"
+              onClick={() => setSelectedPiece(null)}
+            >
+              <X size={12} strokeWidth={1.5} />
+              Close
             </button>
-            <div 
-              className="max-w-5xl w-full flex justify-center items-center" 
+
+            <motion.div
+              initial={{ scale: 0.96, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.96, opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              className="relative"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="border border-black p-4 bg-white shadow-2xl">
-                <img 
-                  src={selectedPiece.imageSrc} 
-                  alt="Gallery piece" 
-                  className="w-full h-auto max-h-[85vh] object-contain"
-                />
+              <img
+                src={selectedPiece.imageSrc}
+                alt=""
+                className="block max-h-[80vh] max-w-[85vw] w-auto h-auto object-contain"
+              />
+
+              {/* Top-left: ◤ — above image */}
+              <div className="absolute -top-4 -left-4 z-10 pointer-events-none">
+                <RockingTriangle size={48} delay={0} corner="tl" />
               </div>
-            </div>
+
+              {/* Bottom-right: ◢ — above image */}
+              <div className="absolute -bottom-4 -right-4 z-10 pointer-events-none">
+                <RockingTriangle size={48} delay={0.5} corner="br" />
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

@@ -4,7 +4,7 @@ export const ART_PIECES: ArtPiece[] = [
   {
     id: '1',
     type: 'photography',
-    title: '',
+    title: ' Arizona, United States ',
     imageSrc: 'https://unsplash.com/photos/NgcE6ffyFxI/download?w=1200',
     mood: '',
     description: ''
@@ -12,7 +12,7 @@ export const ART_PIECES: ArtPiece[] = [
   {
     id: '2',
     type: 'photography',
-    title: '',
+    title: ' Factory Butte, Utah, United States ',
     imageSrc: 'https://unsplash.com/photos/fdFLxY8UDUA/download?w=1200',
     mood: '',
     description: ''
@@ -20,7 +20,7 @@ export const ART_PIECES: ArtPiece[] = [
   {
     id: '3',
     type: 'photography',
-    title: '',
+    title: ' Mount Rainier, Washington, United States ',
     imageSrc: 'https://unsplash.com/photos/KCQLoE42ZIw/download?w=1200',
     mood: '',
     description: ''
@@ -28,7 +28,7 @@ export const ART_PIECES: ArtPiece[] = [
   {
     id: '4',
     type: 'photography',
-    title: '',
+    title: ' Eyjafjallajökull, Iceland ',
     imageSrc: 'https://unsplash.com/photos/VZaZA-1q0yg/download?w=1200',
     mood: '',
     description: ''
@@ -36,8 +36,40 @@ export const ART_PIECES: ArtPiece[] = [
   {
     id: '5',
     type: 'photography',
-    title: '',
+    title: ' Kirkjufell, Iceland ',
     imageSrc: 'https://unsplash.com/photos/Y0DTcx1pGpc/download?w=1200',
+    mood: '',
+    description: ''
+  },
+  {
+    id: 'i1',
+    type: 'illustration',
+    title: ' अनुत्पन्ना अनिरुद्धा अमला विमला नोना न परिपूर्णाः । ',
+    imageSrc: '/illustrations/95235558_p0.png',
+    mood: '',
+    description: ''
+  },
+  {
+    id: 'i2',
+    type: 'illustration',
+    title: " Mglw'nafh Gotha n'gha Nafl-Y'hah ",
+    imageSrc: '/illustrations/100122653_p0.png',
+    mood: '',
+    description: ''
+  },
+  {
+    id: 'i3',
+    type: 'illustration',
+    title: ' the Artist and the Muse ',
+    imageSrc: '/illustrations/141169054_p0.png',
+    mood: '',
+    description: ''
+  },
+  {
+    id: 'i4',
+    type: 'illustration',
+    title: ' 𓇋𓈖𓊪𓅱𓃣 𓎟 𓇾𓏤 𓅟𓂋𓈉 ',
+    imageSrc: '/illustrations/86879676_p0.png',
     mood: '',
     description: ''
   }

@@ -43,7 +43,7 @@ const App: React.FC = () => {
       </div>
 
       {/* MouseCrows SVG overlay — pure DOM, guaranteed above gallery (z-20) */}
-      {currentView !== 'NEST' && <MouseCrows />}
+      <MouseCrows />
 
       {/* Navigation: root-level fixed, z-50 in root stacking context */}
       <Navigation />
@@ -56,7 +56,8 @@ const App: React.FC = () => {
         <main className="w-full h-full relative pointer-events-auto overflow-hidden">
           <AnimatePresence mode="wait">
             {currentView === 'NEST' && <Nest key="nest" />}
-            {currentView === 'GALLERY' && <Gallery key="gallery" />}
+            {currentView === 'PHOTOGRAPHY' && <Gallery key="photography" type="photography" />}
+            {currentView === 'ILLUSTRATION' && <Gallery key="illustration" type="illustration" />}
           </AnimatePresence>
         </main>
       </div>
