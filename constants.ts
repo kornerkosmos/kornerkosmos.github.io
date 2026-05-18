@@ -72,6 +72,14 @@ export const ART_PIECES: ArtPiece[] = [
     imageSrc: '/illustrations/141169054_p0.png',
     mood: '',
     description: ''
+  },
+  {
+    id: 'i5',
+    type: 'illustration',
+    title: ' Наталья Андреевна Ростова ',
+    imageSrc: '/illustrations/93973480_p0.png',
+    mood: '',
+    description: ''
   }
 ];
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ART_PIECES } from '../constants';
@@ -38,7 +38,27 @@ interface GalleryProps {
 
 export const Gallery: React.FC<GalleryProps> = ({ type }) => {
   const [selectedPiece, setSelectedPiece] = useState<ArtPiece | null>(null);
+  const [wireMaskImage, setWireMaskImage] = useState('');
   const pieces = ART_PIECES.filter(p => p.type === type);
+
+  useEffect(() => {
+    const buildMask = () => {
+      const halfH = 4.619; // tan(30°) * cameraZ(8)
+      const aspect = window.innerWidth / window.innerHeight;
+      const halfW = halfH * aspect;
+      // Wire y = 2.5 + x² * 0.002; sample at actual screen edges x=±halfW
+      const wireYEdge = 2.5 + halfW * halfW * 0.002;
+      const wireYCenter = 2.5;
+      // Screen y as fraction (0=top,1=bottom), scaled to SVG viewBox 0–1000
+      const vEdge = ((1 - wireYEdge / halfH) / 2) * 1000;
+      const vCenter = ((1 - wireYCenter / halfH) / 2) * 1000;
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" preserveAspectRatio="none"><path d="M0,${vEdge.toFixed(1)} Q500,${vCenter.toFixed(1)} 1000,${vEdge.toFixed(1)} L1000,1000 L0,1000 Z" fill="black"/></svg>`;
+      setWireMaskImage(`url("data:image/svg+xml,${encodeURIComponent(svg)}")`);
+    };
+    buildMask();
+    window.addEventListener('resize', buildMask);
+    return () => window.removeEventListener('resize', buildMask);
+  }, []);
 
   return (
     <motion.div
@@ -47,16 +67,12 @@ export const Gallery: React.FC<GalleryProps> = ({ type }) => {
       exit={{ opacity: 0 }}
       className="w-full h-full pt-64 px-4 md:px-12 pb-12 overflow-y-auto custom-scrollbar"
       style={{
-        maskImage: `linear-gradient(to bottom,
-          transparent      0px,
-          transparent      200px,
-          rgba(0,0,0,0.5)  230px,
-          black            260px)`,
-        WebkitMaskImage: `linear-gradient(to bottom,
-          transparent      0px,
-          transparent      200px,
-          rgba(0,0,0,0.5)  230px,
-          black            260px)`,
+        maskImage: wireMaskImage,
+        WebkitMaskImage: wireMaskImage,
+        maskSize: '100% 100%',
+        WebkitMaskSize: '100% 100%',
+        maskRepeat: 'no-repeat',
+        WebkitMaskRepeat: 'no-repeat',
         maskAttachment: 'fixed',
         WebkitMaskAttachment: 'fixed',
       } as React.CSSProperties}

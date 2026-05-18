@@ -92,10 +92,17 @@ export function ContourImage({ src, label, className }: ContourImageProps) {
     return () => cancelAnimationFrame(frame);
   }, []);
 
-  // Force SVG repaint after fonts load — fixes mobile font-swap not re-rendering textPath
+  // Explicitly load the needed font subset — document.fonts.ready alone doesn't guarantee
+  // the correct unicode-range chunk (e.g. Devanagari) is downloaded on mobile.
   useEffect(() => {
     let cancelled = false;
-    document.fonts.ready.then(() => {
+    const fontFamily = hasHieroglyphs
+      ? 'Noto Sans Egyptian Hieroglyphs'
+      : hasDevanagari
+      ? 'Noto Serif Devanagari'
+      : 'Cormorant Garamond';
+    const sampleChar = hasHieroglyphs ? '𓇋' : hasDevanagari ? 'अ' : 'A';
+    document.fonts.load(`${svgFontWeight} ${svgFontSize}px "${fontFamily}"`, sampleChar).then(() => {
       if (cancelled) return;
       const svg = textPathRef.current?.closest('svg') as SVGSVGElement | null;
       if (!svg) return;
