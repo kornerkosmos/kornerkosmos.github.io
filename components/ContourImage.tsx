@@ -92,6 +92,19 @@ export function ContourImage({ src, label, className }: ContourImageProps) {
     return () => cancelAnimationFrame(frame);
   }, []);
 
+  // Force SVG repaint after fonts load — fixes mobile font-swap not re-rendering textPath
+  useEffect(() => {
+    let cancelled = false;
+    document.fonts.ready.then(() => {
+      if (cancelled) return;
+      const svg = textPathRef.current?.closest('svg') as SVGSVGElement | null;
+      if (!svg) return;
+      svg.style.visibility = 'hidden';
+      requestAnimationFrame(() => { if (!cancelled) svg.style.visibility = ''; });
+    });
+    return () => { cancelled = true; };
+  }, [contourText]);
+
   // Canvas blob + image reveal; also drives the SVG path each frame
   useEffect(() => {
     const canvas = canvasRef.current;
