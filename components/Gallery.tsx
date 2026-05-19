@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ART_PIECES } from '../constants';
@@ -32,51 +32,28 @@ const RockingTriangle = ({ size = 42, delay = 0, corner }: { size?: number; dela
   );
 };
 
+const GRADIENT_MASK = {
+  maskImage: 'linear-gradient(to bottom, transparent 24vh, black 26vh)',
+  WebkitMaskImage: 'linear-gradient(to bottom, transparent 24vh, black 26vh)',
+} as React.CSSProperties;
+
 interface GalleryProps {
   type: ProjectType;
 }
 
 export const Gallery: React.FC<GalleryProps> = ({ type }) => {
   const [selectedPiece, setSelectedPiece] = useState<ArtPiece | null>(null);
-  const [wireMaskImage, setWireMaskImage] = useState('');
   const pieces = ART_PIECES.filter(p => p.type === type);
 
-  useEffect(() => {
-    const buildMask = () => {
-      const halfH = 4.619; // tan(30°) * cameraZ(8)
-      const aspect = window.innerWidth / window.innerHeight;
-      const halfW = halfH * aspect;
-      // Wire y = 2.5 + x² * 0.002; sample at actual screen edges x=±halfW
-      const wireYEdge = 2.5 + halfW * halfW * 0.002;
-      const wireYCenter = 2.5;
-      // Screen y as fraction (0=top,1=bottom), scaled to SVG viewBox 0–1000
-      const vEdge = ((1 - wireYEdge / halfH) / 2) * 1000;
-      const vCenter = ((1 - wireYCenter / halfH) / 2) * 1000;
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" preserveAspectRatio="none"><path d="M0,${vEdge.toFixed(1)} Q500,${vCenter.toFixed(1)} 1000,${vEdge.toFixed(1)} L1000,1000 L0,1000 Z" fill="black"/></svg>`;
-      setWireMaskImage(`url("data:image/svg+xml,${encodeURIComponent(svg)}")`);
-    };
-    buildMask();
-    window.addEventListener('resize', buildMask);
-    return () => window.removeEventListener('resize', buildMask);
-  }, []);
-
   return (
+    <div className="w-full h-full" style={GRADIENT_MASK}>
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="w-full h-full pt-64 px-4 md:px-12 pb-12 overflow-y-auto custom-scrollbar"
-      style={{
-        maskImage: wireMaskImage,
-        WebkitMaskImage: wireMaskImage,
-        maskSize: '100% 100%',
-        WebkitMaskSize: '100% 100%',
-        maskRepeat: 'no-repeat',
-        WebkitMaskRepeat: 'no-repeat',
-        maskAttachment: 'fixed',
-        WebkitMaskAttachment: 'fixed',
-      } as React.CSSProperties}
+      className="w-full h-full"
     >
+      <div className="w-full h-full px-4 md:px-12 pb-12 overflow-y-auto custom-scrollbar" style={{ paddingTop: '28vh' }}>
       <div className="columns-1 md:columns-2 lg:columns-3 gap-8 mt-8">
         {pieces.map((piece, index) => {
           const { size, rotate, nudge } = organicProps(index);
@@ -146,6 +123,8 @@ export const Gallery: React.FC<GalleryProps> = ({ type }) => {
         </AnimatePresence>,
         document.body
       )}
+      </div>
     </motion.div>
+    </div>
   );
 };

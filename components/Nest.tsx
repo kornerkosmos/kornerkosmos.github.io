@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { SpinningPyramid } from './SpinningPyramid';
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -28,7 +28,7 @@ const TriSVG = ({ fillOpacity }: { fillOpacity: number }) => (
       fill="white"
       fillOpacity={fillOpacity}
       stroke="black"
-      strokeWidth="1.8"
+      strokeWidth="1.1"
       strokeLinejoin="round"
     />
   </svg>
@@ -75,27 +75,21 @@ const TriangleNest = ({ imageSrc }: { imageSrc: string }) => {
   );
 };
 
-export const Nest: React.FC = () => (
+const GRADIENT_MASK = {
+  maskImage: 'linear-gradient(to bottom, transparent 24vh, black 26vh)',
+  WebkitMaskImage: 'linear-gradient(to bottom, transparent 24vh, black 26vh)',
+} as React.CSSProperties;
+
+export const Nest: React.FC = () => {
+  return (
+  <div className="w-full h-full" style={GRADIENT_MASK}>
   <motion.div
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
     exit={{ opacity: 0 }}
-    className="w-full h-full overflow-y-auto custom-scrollbar"
-    style={{
-      maskImage: `linear-gradient(to bottom,
-        transparent     0px,
-        transparent     200px,
-        rgba(0,0,0,0.5) 230px,
-        black           260px)`,
-      WebkitMaskImage: `linear-gradient(to bottom,
-        transparent     0px,
-        transparent     200px,
-        rgba(0,0,0,0.5) 230px,
-        black           260px)`,
-      maskAttachment: 'fixed',
-      WebkitMaskAttachment: 'fixed',
-    } as React.CSSProperties}
+    className="w-full h-full"
   >
+    <div className="w-full h-full overflow-y-auto custom-scrollbar">
     <div className="h-[80vh] pointer-events-none" />
 
     {/* Wire separator — parabolic sag matching the background Wires component */}
@@ -133,5 +127,8 @@ export const Nest: React.FC = () => (
         </div>
       </div>
     </div>
+    </div>
   </motion.div>
-);
+  </div>
+  );
+};
